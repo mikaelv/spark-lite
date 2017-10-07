@@ -7,23 +7,42 @@ import TestCommon._
 import sparklite.DatasetAble.datasetImpl
 
 class DatasetAbleSpecs extends org.specs2.mutable.Specification {
-  "the DatasetAble implementation for Spark Dataset" should {
-    import session.implicits._
 
-    val data = Vector(Person1, Person2)
+  // TODO factorize unit tests
+  // TODO implement for Vector
+  val data = Vector(Person1, Person2, Person3)
+  import session.implicits._
+
+  "the DatasetAble implementation for Spark Dataset" should {
     val ds = session.createDataset(data)
+    val dsAble = DatasetAble.datasetImpl
+    val groupAble = KeyValueGroupedDatasetAble.datasetImpl
     "map" in {
-      val actual: Dataset[Int] = DatasetAble.datasetImpl.map(ds)(_.age)
+      val actual: Dataset[Int] = dsAble.map(ds)(_.age)
       actual.collect().toVector must_=== data.map(_.age)
     }
 
     "groupByKey then mapGroups" in {
-      val group = DatasetAble.datasetImpl.groupByKey(ds)(_.age)
+      val group = dsAble.groupByKey(ds)(_.age)
       val actual: Dataset[(Int, Seq[String])] =
-        KeyValueGroupedDatasetAble.datasetImpl.mapGroups(group)((k, vs) => (k, vs.map(_.name).toSeq))
-      actual.collect().toVector must_=== Vector((25, Seq("bob")), (45, Seq("roger", "john")))
+        groupAble.mapGroups(group)((k, vs) => (k, vs.map(_.name).toVector))
+      actual.collect().toSet must_=== Set((25, Vector("bob")), (45, Vector("roger", "john")))
+    }
+  }
 
-      // TODO does not compile with datasetImpl2. Why ??
+  "the DatasetAble implementation for Spark RDD" should {
+    val ds = session.sparkContext.makeRDD(data)
+    val dsAble = DatasetAble.rddImpl
+    val groupAble = KeyValueGroupedDatasetAble.rddImpl
+    "map" in {
+      val actual = dsAble.map(ds)(_.age)
+      actual.collect().toVector must_=== data.map(_.age)
+    }
+
+    "groupByKey then mapGroups" in {
+      val group = dsAble.groupByKey(ds)(_.age)
+      val actual = groupAble.mapGroups(group)((k, vs) => (k, vs.map(_.name).toVector))
+      actual.collect().toSet must_=== Set((25, Vector("bob")), (45, Vector("roger", "john")))
     }
   }
 
