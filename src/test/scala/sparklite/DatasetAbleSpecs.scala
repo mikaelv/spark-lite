@@ -3,6 +3,8 @@ package sparklite
 import DatasetAbleSpecs._
 import TestCommon._
 import sparklite.DatasetAble._
+import sparklite._
+
 
 class DatasetAbleSpecs extends org.specs2.mutable.Specification {
 
@@ -28,17 +30,17 @@ class DatasetAbleSpecs extends org.specs2.mutable.Specification {
 
 
 
-  def test[F[_], G[_, _]](ds: F[Person])(implicit dsAble: DatasetAble[F, G],
-                                         groupAble: KeyValueGroupedDatasetAble[F, G]) = {
+  // TODO it would be nice if we could only specify F. Use existential type?
+  def test[F[_], G[_, _]](ds: F[Person])(implicit dsAble: DatasetAble[F, G]) = {
     "map" in {
-      val actual: F[Int] = dsAble.map(ds)(_.age)
-      dsAble.collect(actual).toVector must_=== data.map(_.age)
+      val actual: F[Int] = ds.map(_.age)
+      actual.collect().toVector must_=== data.map(_.age)
     }
 
     "groupByKey then mapGroups" in {
-      val group = dsAble.groupByKey(ds)(_.age)
+      val group = ds.groupByKey(_.age)
       val actual: F[(Int, Seq[String])] =
-        groupAble.mapGroups(group)((k, vs) => (k, vs.map(_.name).toVector))
+        group.mapGroups((k, vs) => (k, vs.map(_.name).toVector))
       dsAble.collect(actual).toSet must_=== Set((25, Vector("bob")), (45, Vector("roger", "john")))
     }
   }
