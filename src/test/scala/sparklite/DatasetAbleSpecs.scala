@@ -29,8 +29,6 @@ class DatasetAbleSpecs extends org.specs2.mutable.Specification {
 
 
 
-
-  // TODO it would be nice if we could only specify F. Use existential type?
   def test[F[_], G[_, _]](ds: F[Person])(implicit dsAble: DatasetAble[F, G]) = {
     "map" in {
       val actual: F[Int] = ds.map(_.age)
