@@ -30,6 +30,10 @@ class DatasetAbleSpecs extends org.specs2.mutable.Specification {
 
 
   def test[F[_], G[_, _]](ds: F[Person])(implicit dsAble: DatasetAble[F, G]) = {
+    "flatMap" in { pending }
+
+    "filter" in { pending }
+
     "map" in {
       val actual: F[Int] = ds.map(_.age)
       actual.collect().toVector must_=== data.map(_.age)
@@ -39,7 +43,15 @@ class DatasetAbleSpecs extends org.specs2.mutable.Specification {
       val group = ds.groupByKey(_.age)
       val actual: F[(Int, Seq[String])] =
         group.mapGroups((k, vs) => (k, vs.map(_.name).toVector))
-      dsAble.collect(actual).toSet must_=== Set((25, Vector("bob")), (45, Vector("roger", "john")))
+      actual.collect().toSet must_=== Set((25, Vector("bob")), (45, Vector("roger", "john")))
+    }
+
+
+    "groupByKey then flatMapGroups" in {
+      val group = ds.groupByKey(_.age)
+      val actual: F[String] =
+        group.flatMapGroups((k, vs) => vs.map(_.name).toVector)
+      actual.collect().toSet must_=== Set("bob", "roger", "john")
     }
   }
 

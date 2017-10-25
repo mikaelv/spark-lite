@@ -16,5 +16,9 @@ package object sparklite {
   implicit class GroupAbleSyntax[F[_], G[_, _], K, V](val group: G[K, V])(implicit dsAble: DatasetAble[F, G]) {
     def mapGroups[U: Encoder : ClassTag](f: (K, Iterator[V]) => U): F[U] =
       dsAble.mapGroups(group)(f)
+
+    def flatMapGroups[U: Encoder : ClassTag](f: (K, Iterator[V]) => TraversableOnce[U]): F[U] =
+      dsAble.flatMapGroups(group)(f)
   }
+
 }

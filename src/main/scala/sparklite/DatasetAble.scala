@@ -15,6 +15,8 @@ trait DatasetAble[F[_], G[_, _]] {
   def collect[T: ClassTag](ft: F[T]): Array[T]
 
   def mapGroups[K, V, U: Encoder : ClassTag](kvGrouped: G[K, V])(f: (K, Iterator[V]) => U): F[U]
+
+  def flatMapGroups[K, V, U: Encoder : ClassTag](kvGrouped: G[K, V])(f: (K, Iterator[V]) => TraversableOnce[U]): F[U]
 }
 
 
@@ -33,6 +35,9 @@ object DatasetAble {
       kvGrouped.map { case (k, vs) => f(k, vs.iterator) }(breakOut)
 
 
+    def flatMapGroups[K, V, U: Encoder : ClassTag](kvGrouped: VectorGroup[K, V])(f: (K, Iterator[V]) => TraversableOnce[U]): Vector[U] =
+      kvGrouped.flatMap { case (k, vs) => f(k, vs.iterator) }(breakOut)
+
     def collect[T: ClassTag](ft: Vector[T]) = ft.toArray
   }
 
@@ -47,20 +52,30 @@ object DatasetAble {
       kvGrouped map { case (k, it: Iterable[V]) => f(k, it.iterator) }
 
 
+    def flatMapGroups[K, V, U: Encoder : ClassTag](kvGrouped: RDDGroup[K, V])(f: (K, Iterator[V]) => TraversableOnce[U])
+    : RDD[U] =
+      kvGrouped flatMap { case (k, it: Iterable[V]) => f(k, it.iterator) }
+
     def collect[T: ClassTag](ft: RDD[T]) = ft.collect()
   }
 
   implicit val datasetImpl: DatasetAble[Dataset, KeyValueGroupedDataset] = new DatasetAble[Dataset, KeyValueGroupedDataset] {
+
+    // TODO see sample usages
+    //    def agg[T, U: ClassTag : Encoder](t: Dataset[T])(f: (T) => U): Dataset[U] = t.agg(Map.empty[String, String]).map.se map f
 
     def map[T, U: ClassTag : Encoder](t: Dataset[T])(f: (T) => U): Dataset[U] = t map f
 
     def groupByKey[T, K: Encoder : ClassTag](ft: Dataset[T])(func: (T) => K): org.apache.spark.sql.KeyValueGroupedDataset[K, T] =
       ft groupByKey func
 
-    def mapGroups[K, V, U: Encoder : ClassTag](kvGrouped: KeyValueGroupedDataset[K, V])
-                                              (f: (K, Iterator[V]) => U)
+    def mapGroups[K, V, U: Encoder : ClassTag](kvGrouped: KeyValueGroupedDataset[K, V])(f: (K, Iterator[V]) => U)
     : Dataset[U] =
       kvGrouped mapGroups f
+
+    def flatMapGroups[K, V, U: Encoder : ClassTag](kvGrouped: KeyValueGroupedDataset[K, V])(f: (K, Iterator[V]) => TraversableOnce[U])
+    : Dataset[U] =
+      kvGrouped flatMapGroups f
 
 
     def collect[T: ClassTag](ft: Dataset[T]) = ft.collect()
