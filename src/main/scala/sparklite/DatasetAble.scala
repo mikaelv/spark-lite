@@ -10,6 +10,10 @@ trait DatasetAble[F[_], G[_, _]] {
 
   def map[T, U: ClassTag : Encoder](ft: F[T])(f: T => U): F[U]
 
+  def flatMap[T, U: ClassTag : Encoder](ft: F[T])(f: (T) => TraversableOnce[U]): F[U]
+
+  def filter[T](ft: F[T])(f: (T) => Boolean): F[T]
+
   def groupByKey[T, K: Encoder : ClassTag](ft: F[T])(func: T => K): G[K, T]
 
   def collect[T: ClassTag](ft: F[T]): Array[T]
@@ -28,6 +32,12 @@ object DatasetAble {
   implicit val vectorImpl: DatasetAble[Vector, VectorGroup] = new DatasetAble[Vector, VectorGroup] {
     def map[T, U: ClassTag : Encoder](t: Vector[T])(f: (T) => U) = t map f
 
+    def flatMap[T, U: ClassTag : Encoder](ft: Vector[T])(f: (T) => TraversableOnce[U]): Vector[U] =
+      ft flatMap f
+
+    def filter[T](ft: Vector[T])(f: (T) => Boolean): Vector[T] =
+      ft filter f
+
     def groupByKey[T, K: Encoder : ClassTag](ft: Vector[T])(func: (T) => K) =
       ft groupBy func
 
@@ -43,6 +53,12 @@ object DatasetAble {
 
   implicit val rddImpl: DatasetAble[RDD, RDDGroup] = new DatasetAble[RDD, RDDGroup] {
     def map[T, U: ClassTag : Encoder](t: RDD[T])(f: (T) => U): RDD[U] = t map f
+
+    def flatMap[T, U: ClassTag : Encoder](ft: RDD[T])(f: (T) => TraversableOnce[U]): RDD[U] =
+      ft flatMap f
+
+    def filter[T](ft: RDD[T])(f: (T) => Boolean) =
+      ft filter f
 
     def groupByKey[T, K: Encoder : ClassTag](ft: RDD[T])(func: (T) => K) =
       ft groupBy func
@@ -65,6 +81,10 @@ object DatasetAble {
     //    def agg[T, U: ClassTag : Encoder](t: Dataset[T])(f: (T) => U): Dataset[U] = t.agg(Map.empty[String, String]).map.se map f
 
     def map[T, U: ClassTag : Encoder](t: Dataset[T])(f: (T) => U): Dataset[U] = t map f
+
+    def flatMap[T, U: ClassTag : Encoder](t: Dataset[T])(f: (T) => TraversableOnce[U]): Dataset[U] = t flatMap f
+
+    def filter[T](t: Dataset[T])(f: (T) => Boolean): Dataset[T] = t filter f
 
     def groupByKey[T, K: Encoder : ClassTag](ft: Dataset[T])(func: (T) => K): org.apache.spark.sql.KeyValueGroupedDataset[K, T] =
       ft groupByKey func

@@ -8,7 +8,7 @@ import sparklite._
 
 class DatasetAbleSpecs extends org.specs2.mutable.Specification {
 
-  val data = Vector(Person1, Person2, Person3)
+  val data = Vector(PersonBob, PersonRoger, PersonJohn)
 
   import session.implicits._
 
@@ -30,9 +30,15 @@ class DatasetAbleSpecs extends org.specs2.mutable.Specification {
 
 
   def test[F[_], G[_, _]](ds: F[Person])(implicit dsAble: DatasetAble[F, G]) = {
-    "flatMap" in { pending }
+    "flatMap" in {
+      val actual: F[String] = ds.flatMap(_.children)
+      actual.collect().toVector must_=== data.flatMap(_.children)
+    }
 
-    "filter" in { pending }
+    "filter" in {
+      val actual: F[Person] = ds.filter(_.age >= 45)
+      actual.collect().toSet must_=== Set(PersonRoger, PersonJohn)
+    }
 
     "map" in {
       val actual: F[Int] = ds.map(_.age)
@@ -59,9 +65,9 @@ class DatasetAbleSpecs extends org.specs2.mutable.Specification {
 
 object DatasetAbleSpecs {
 
-  case class Person(name: String, age: Int)
+  case class Person(name: String, age: Int, children: Seq[String] = Seq.empty)
 
-  val Person1 = Person("bob", 25)
-  val Person2 = Person("roger", 45)
-  val Person3 = Person("john", 45)
+  lazy val PersonBob = Person("bob", 25)
+  lazy val PersonRoger = Person("roger", 45, Seq("alice"))
+  lazy val PersonJohn = Person("john", 45, Seq("rob", "lucie"))
 }
