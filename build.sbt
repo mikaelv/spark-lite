@@ -42,8 +42,8 @@ homepage := Some(url("https://github.com/mikaelv/spark-lite"))
 
 scmInfo := Some(
   ScmInfo(
-    url("https://github.com/monix/shade"),
-    "scm:git@github.com:monix/shade.git"
+    url("https://github.com/mikaelv/spark-lite"),
+    "scm:git@github.com:mikaelv/spark-lite.git"
   ))
 
 developers := List(
