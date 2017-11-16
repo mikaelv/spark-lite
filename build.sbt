@@ -13,6 +13,9 @@ libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "3.9.5" % "test")
 
 scalacOptions in Test ++= Seq("-Yrangepos")
 
+// https://github.com/sbt/sbt/issues/3570
+updateOptions := updateOptions.value.withGigahorse(false)
+
 useGpg := false
 usePgpKeyHex("AB325B7B29AC50FF")
 pgpPublicRing := baseDirectory.value / "project" / ".gnupg" / "pubring.gpg"
