@@ -4,10 +4,10 @@ version := "0.0.1"
 
 scalaVersion := "2.11.11"
 
-organization := "valdev"
+organization := "com.github.mikaelv"
 
-libraryDependencies += "org.apache.spark" %% "spark-core" % "2.0.2"
-libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.0.2"
+libraryDependencies += "org.apache.spark" %% "spark-core" % "2.2.0"
+libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.2.0"
 
 libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "3.9.5" % "test")
 
