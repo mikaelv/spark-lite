@@ -1,4 +1,4 @@
-import org.apache.spark.sql.Encoder
+import org.apache.spark.sql.{Dataset, Encoder, TypedColumn}
 
 import scala.reflect.ClassTag
 
@@ -23,6 +23,8 @@ package object sparklite {
 
     def flatMapGroups[U: Encoder : ClassTag](f: (K, Iterator[V]) => TraversableOnce[U]): F[U] =
       dsAble.flatMapGroups(group)(f)
-  }
 
+    def agg[U1](col1: TypedColumn[V, U1]): F[(K, U1)] =
+      dsAble.agg(group)(col1)
+  }
 }

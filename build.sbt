@@ -13,6 +13,10 @@ libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "3.9.5" % "test")
 
 scalacOptions in Test ++= Seq("-Yrangepos")
 
+/* SBT setup for sonatype: See https://alexn.org/blog/2017/08/16/automatic-releases-sbt-travis.html
+   additional steps:
+   gpg2 -v --keyserver hkp://eu.pool.sks-keyservers.net --send-keys 29AC50FF
+*/
 // https://github.com/sbt/sbt/issues/3570
 updateOptions := updateOptions.value.withGigahorse(false)
 
@@ -27,8 +31,8 @@ sonatypeProfileName := organization.value
 credentials += Credentials(
   "Sonatype Nexus Repository Manager",
   "oss.sonatype.org",
-  sys.env.getOrElse("SONATYPE_USER", ""),
-  sys.env.getOrElse("SONATYPE_PASS", "")
+  sys.env("SONATYPE_USER"),
+  sys.env("SONATYPE_PASS")
 )
 
 isSnapshot := version.value endsWith "SNAPSHOT"

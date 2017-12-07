@@ -2,6 +2,8 @@ package sparklite
 
 import DatasetAbleSpecs._
 import TestCommon._
+import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.execution.aggregate.TypedCount
 import sparklite.DatasetAble._
 import sparklite._
 
@@ -26,7 +28,6 @@ class DatasetAbleSpecs extends org.specs2.mutable.Specification {
     val ds = data
     test(ds)
   }
-
 
 
   def test[F[_], G[_, _]](ds: F[Person])(implicit dsAble: DatasetAble[F, G]) = {
@@ -58,6 +59,18 @@ class DatasetAbleSpecs extends org.specs2.mutable.Specification {
       val actual: F[String] =
         group.flatMapGroups((k, vs) => vs.map(_.name).toVector)
       actual.collect().toSet must_=== Set("bob", "roger", "john")
+    }
+
+    "groupByKey then agg(count)" in {
+      import org.apache.spark.sql.functions._
+      val group = ds.groupByKey(_.age)
+      val countCol = new TypedCount[Person](p => p).toColumn
+      // TODO support count("*")
+      // TODO test distinct
+//      val actual: F[(Int, Long)] = group.agg(count("*"))
+      val actual: F[(Int, Long)] = group.agg(countCol)
+
+      actual.collect().toSet must_=== Set((45, 2L), (25, 1L))
     }
   }
 
